@@ -1,0 +1,132 @@
+File: config.py
+1. commonplace_text(world)
+Cleans user input for database queries. Removes spaces, underscores, and converts to lowercase.
+
+Example: "SQL Attack_tools" → "sqlattacktools"
+
+Returns empty string if input is None.
+
+2. create_users_sql(url)
+Creates users table with columns: id, name, salt, hashed_password, email.
+
+Uses psycopg2 to connect to PostgreSQL database.
+
+Handles errors with rollback on failure.
+
+3. time_delay(start_time)
+Ensures at least 0.8 seconds pass from the given start_time.
+
+Prevents rapid API calls or brute-force attacks.
+
+Falls back to basic delay if error occurs.
+
+4. create_files_table(url, create_files_table_sql)
+Creates files table if it doesn't exist.
+
+Includes indexes on expires_at, filename, and ip columns.
+
+Uses FILES_TABLE SQL string from config.
+
+5. get_conn(conn_commit)
+Context manager that gets a connection from connection pool (main_pool).
+
+Auto-commits if conn_commit=True, otherwise rolls back.
+
+Returns connection to pool when done.
+
+6. get_cursor(conn_commit)
+Context manager that gets a database cursor.
+
+Uses get_conn() internally, manages both connection and cursor lifecycle.
+
+Auto-commits or rolls back based on conn_commit.
+
+File: jwt_func.py
+1. generate_jwt_token(payload_data, expires_minutes)
+Creates JWT token with exp, iat, iss claims.
+
+Uses HS256 algorithm with JWT_TOKEN secret.
+
+Validates inputs: requires payload_data and positive expires_minutes.
+
+Handles JWT errors, memory errors, and general exceptions.
+
+2. verify_jwt_token(token)
+Decodes and validates JWT token.
+
+Checks expiration, signature, and issuer ("prytysecure").
+
+Returns success status with payload or error message.
+
+File: main_func.py
+1. sql_add_files(filename, save_key, download_url, expires_at, user_id, ip, safe_token)
+Inserts file record into files table.
+
+Handles duplicate save_key errors (IntegrityError).
+
+Logs operational errors and data errors (filename too long).
+
+2. api_add_file(file, filename, user_ip, user_name, expires)
+Main file upload function:
+
+Validates file size (1KB - 10MB)
+
+Validates filename extension and format
+
+Uploads to S3 (Supabase Storage)
+
+Generates presigned download URL
+
+Saves metadata to database with safe_token
+
+Returns upload details or error message.
+
+3. delete_files(file_keys, bucket_name)
+Deletes multiple files from S3 bucket.
+
+Takes list of S3 object keys.
+
+Returns success status and list of deleted files.
+
+Handles S3 client errors.
+
+4. api_delete_expires()
+Finds expired files in database (expires_at < NOW()).
+
+Deletes them from S3 using delete_files().
+
+Removes records from files table.
+
+Returns count of deleted files.
+
+5. api_delete_file(user_options, safe_token, user_input)
+Deletes specific file by filename or save_key.
+
+Requires matching safe_token for security.
+
+user_options determines search method:
+
+"saveid", "savetoken", "savekey": search by save_key
+
+Default: search by filename
+
+Deletes from S3 and database if token matches.
+
+File: other_func.py
+1. verify_pass(user_input, password, salt)
+Verifies password using SHA-512 hashing.
+
+If salt provided, uses salt in hash calculation.
+
+Uses hmac.compare_digest() for timing-attack protection.
+
+Returns string "True" or "False".
+
+2. get_url_by_name(user_id, filename, ip)
+Retrieves download URL for a file by filename.
+
+Checks both user_id and ip for access control.
+
+Returns all matching download URLs or error if not found.
+
+Handles database operational errors.
