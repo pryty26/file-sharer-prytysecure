@@ -86,10 +86,10 @@ def sql_add_files(filename, save_key, download_url, expires_at, user_id, ip, saf
 
 
 
-def api_add_file(file, filename:str, user_ip, user_name:str, expires:int = PRESIGNED_EXPIRES):
+def api_add_file(file, filename:str, user_ip, user_id:str, expires:int = PRESIGNED_EXPIRES):
     try:
-        if not user_name:
-            user_name = 'guest'
+        if not user_id:
+            user_id = 'guest'
 
         if file and filename:
             if (not file.content_length or file.content_length < 1 * 1024
@@ -139,7 +139,7 @@ def api_add_file(file, filename:str, user_ip, user_name:str, expires:int = PRESI
             sql_add_files(filename=secure_filename(filename),
                            save_key=random_name,download_url=download_url,
                            expires_at=expires_at.isoformat(),
-                           user_id=user_name, ip=user_ip,
+                           user_id=user_id, ip=user_ip,
                            safe_token=safe_token,
                           )
 
@@ -152,7 +152,7 @@ def api_add_file(file, filename:str, user_ip, user_name:str, expires:int = PRESI
                 'fileSize':file.content_length,
                 "uploadedAt": datetime.now(),
                 'expires_at':expires_at.isoformat(),
-                'user_id':user_name,
+                'user_id':user_id,
                 'expires_in_seconds': expires
             }
 
@@ -197,9 +197,11 @@ def delete_files(file_keys=None, bucket_name=BUCKET_NAME,):
                 result.append(f"\ndelete failed: {error.get('Key')} - {error.get('Message')}")
         all_deleted = [deleted.get('Key') for deleted in response.get('Deleted')]
         if not all_deleted:
+            logging.error(f'delete files error:{result}')
             return{'success':False,
                    'message':'Fuck, there is not even a single one was deleted successfully.'
                              ' There was only fucking errors.'}
+            #this message wont show at front-end or to the user
 
         return {'success':True, 'message':result, 'all_deleted':all_deleted}
 
