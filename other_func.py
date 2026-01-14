@@ -27,14 +27,14 @@ def get_data_by_name(user_id, filename, safe_token, user_options):
             if commonplace_text(user_options) in ['selectall']:
                 cursor.execute(
                     '''
-                SELECT download_url, save_key, fileName, expires_at, created_at FROM files 
-                WHERE filename = %s AND (safe_token = %s OR  user_id = %s)
+                SELECT download_url, save_key, filename, expires_at, created_at FROM files 
+                WHERE (safe_token = %s AND user_id = %s)
                 ''',(safe_token, user_id)
                                )
             else:
                 cursor.execute(
                     '''
-                SELECT download_url, save_key, fileName, expires_at, created_at FROM files 
+                SELECT download_url, save_key, filename, expires_at, created_at FROM files 
                 WHERE filename = %s AND (safe_token = %s OR  user_id = %s)
                 ''',(filename, safe_token, user_id)
                                )

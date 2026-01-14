@@ -102,7 +102,7 @@ async def api_get_token_page(
                 print(token)
                 return {'success':True,'message':'Process success Token exists','token':f'{token}'}
         payload = {
-            'safe_key':uuid.uuid4(),
+            'safe_key':f"{uuid.uuid4()}",
             'user_id':'guest',
             'role':'guest',
             'gmail_verified':False
