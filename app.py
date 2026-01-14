@@ -19,7 +19,7 @@ def jwt_check(func):
         if not token:
             raise HTTPException(status_code=401, detail="token unfound")
         result = verify_jwt_token(token=token)
-        if not result.get('success') or result['message'].get('safe_key'):
+        if not result.get('success') or not result['message'].get('safe_key'):
             raise HTTPException(status_code=418, detail='lvaIIid T0k#n '
                                                         'St@t%s c*d#: 99999999999999999')
         kwargs['data'] = result.get('message')
@@ -111,7 +111,11 @@ async def api_get_token_page(
         expires_minutes = 60*24*7
         generate_result = generate_jwt_token(payload_data=payload, expires_minutes=expires_minutes)
         if generate_result.get('success'):
-            return {'success': True, 'message': 'Token generation success', 'token': f"{generate_result.get('message')}"}
+            return {
+                'success': True,
+                'message': 'Token generation success',
+                'token': f"{generate_result.get('message')}"
+                }
 
         return {'success': True, 'message': f'Token generation error:{generate_result.get('message')}', 'token': ""}
     except MemoryError as e:

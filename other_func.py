@@ -1,6 +1,5 @@
 import logging
-from django.db import OperationalError
-
+from psycopg2 import errors
 from config import get_cursor
 import hashlib
 import hmac
@@ -20,12 +19,12 @@ def verify_pass(user_input:str, password:str, salt:str=False):
         return f'{False}'
 
 
-def get_data_by_name(user_id, filename, safe_token, user_uptions):
+def get_data_by_name(user_id, filename, safe_token, user_options):
     if not user_id or not safe_token:
         return {'success':False, 'message':'please fill all input'}
     try:
         with get_cursor(conn_commit=False) as cursor:
-            if commonplace_text(user_uptions) in ['selectall']:
+            if commonplace_text(user_options) in ['selectall']:
                 cursor.execute(
                     '''
                 SELECT download_url, save_key, fileName, expires_at, created_at FROM files 
