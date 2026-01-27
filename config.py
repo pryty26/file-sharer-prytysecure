@@ -18,9 +18,6 @@ SUPABASE_PROJECT_REF = os.environ.get('SUPABASE_PROJECT_REF')  # project ref url
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-
-API_KEY = os.environ.get("API_KEY", secrets.token_urlsafe(32))
-
 DATABASE_URL = os.environ.get('DATABASE_URL')  # Supabase Postgres
 
 BUCKET_NAME = 'prytysecure'

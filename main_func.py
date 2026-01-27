@@ -86,12 +86,12 @@ def sql_add_files(filename, save_key, download_url, expires_at, user_id, ip, saf
 
 
 
-def api_add_file(file, filename:str, user_ip, user_id:str, expires:int = PRESIGNED_EXPIRES):
+def api_add_file(file, filename:str, user_ip, user_id:str, expires:int = PRESIGNED_EXPIRES, safe_token:str=None):
     try:
         if not user_id:
             user_id = 'guest'
 
-        if file and filename:
+        if safe_token and file and filename:
             if (not file.content_length or file.content_length < 1 * 1024
                     or file.content_length > 10 * 1024 * 1024):
                 return {'success': False, 'message': 'file size error',
@@ -132,8 +132,6 @@ def api_add_file(file, filename:str, user_ip, user_id:str, expires:int = PRESIGN
 
             expires_at = datetime.now() + timedelta(seconds=expires)
 
-
-            safe_token = uuid.uuid4()
 
             #def sql_add_files(filename, save_key, download_url, expires_at, user_id, ip)
             sql_add_files(filename=secure_filename(filename),
@@ -262,10 +260,10 @@ def api_delete_file(user_options:str=None, safe_token:str=None, user_input:str=N
         with get_cursor(conn_commit=True) as cursor:
             if user_options in ['saveid','savetoken','savekey']:
                 sql = 'SELECT save_key FROM files WHERE save_key = %s AND safe_token = %s'
-                cursor.execute(sql, user_input, safe_token)
+                cursor.execute(sql, (user_input, safe_token))
             else:
                 sql = 'SELECT save_key FROM files WHERE filename = %s AND safe_token = %s'
-                cursor.execute(sql, user_input, safe_token)
+                cursor.execute(sql, (user_input, safe_token))
             counts = cursor.fetchall()
             if not counts:
                 return {'success': False, 'message': "No files found matching the provided criteria"}

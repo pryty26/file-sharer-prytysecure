@@ -3,7 +3,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from fastapi import FastAPI, File, UploadFile, Request, Depends, HTTPException, status, Form
+from fastapi import FastAPI, File, UploadFile, Request, HTTPException,Form
 from main_func import api_add_file, api_delete_file, api_delete_expires
 from functools import wraps
 import uuid
@@ -56,7 +56,7 @@ limiter.app = app
 @app.delete('/api/delete')
 @jwt_check
 @limiter.limit("20/minute, 150/hours, 220/days")
-def api_delete_page(
+async def api_delete_page(
         request:Request,
         user_input: str = Form(..., alias="userinput"),
         user_options: Optional[str] = Form(None, alias="useroptions"),
@@ -67,13 +67,15 @@ def api_delete_page(
     return api_delete_file(user_options=user_options,safe_token=safe_token,user_input=user_input)
 
 @app.post("/api/upload")
+@jwt_check
 @limiter.limit("10/minute, 100/hours, 200/days")
 async def upload_file_page(
         request: Request,
         file: UploadFile = File(...),
+        **kwargs,
 ):
     filename = file.filename
-
+    safe_token = kwargs['data'].get('safe_token')
 
     user_ip = request.client.host
 
@@ -83,10 +85,12 @@ async def upload_file_page(
         filename=filename,
         user_ip=user_ip,
         user_id="guest",
-        expires=3600
+        expires=3600,
+        safe_token=safe_token
     )
-
     return result
+
+
 @app.post("/api/get_token")
 @limiter.limit("20/minute, 150/hours, 220/days")
 async def api_get_token_page(
@@ -102,7 +106,7 @@ async def api_get_token_page(
                 print(token)
                 return {'success':True,'message':'Process success Token exists','token':f'{token}'}
         payload = {
-            'safe_key':f"{uuid.uuid4()}",
+            'safe_token':f"{uuid.uuid4()}",
             'user_id':'guest',
             'role':'guest',
             'gmail_verified':False
